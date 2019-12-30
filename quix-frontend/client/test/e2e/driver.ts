@@ -46,22 +46,26 @@ export class Driver {
   public evaluate: Evaluate;
   public log: Log;
 
+  constructor(private readonly baseURL_ = baseURL, private readonly mockedServer = true) {}
+
   async init() {
     this.page = await this.browser.newPage();
-    this.mock = new Mock();
+    this.mock = new Mock(this.baseURL_);
     this.url = new URL(this.page);
     this.query = new Query(this.page);
     this.click = new Click(this.page);
     this.evaluate = new Evaluate(this.page);
     this.log = new Log(this.page);
 
-    await this.mock.reset();
+    if (this.mockedServer) {
+      await this.mock.reset();
+    }
 
     return this;
   }
 
   async goto(state: string) {
-    return this.page.goto(`${baseURL}/#${state}`);
+    return this.page.goto(`${this.baseURL_}/#${state}`);
   }
 
   async sleep(ms: number) {
@@ -73,11 +77,11 @@ export class Driver {
   }
 }
 
-export class Mock {
-  constructor () {}
+class Mock {
+  constructor (private readonly baseURL_ = baseURL) {}
 
   async http(pattern: string, payload: any) {
-    return fetch(`${baseURL}/mock/pattern`, {
+    return fetch(`${this.baseURL_}/mock/pattern`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -87,11 +91,11 @@ export class Mock {
   }
 
   async reset() {
-    return fetch(`${baseURL}/mock/reset`);
+    return fetch(`${this.baseURL_}/mock/reset`);
   }
 }
 
-export class URL {
+class URL {
   constructor (private readonly page: Page) {}
 
   async matches(pattern: string) {
@@ -106,7 +110,7 @@ export class URL {
   }
 }
 
-export class Query {
+class Query {
   constructor (private readonly page: Page) {}
 
   async hook(hook: string, pseudoClass: string = '') {
@@ -134,7 +138,7 @@ export class Query {
   }
 }
 
-export class Click {
+class Click {
   constructor (private readonly page: Page) {}
 
   async hook(hook: string, pseudoClass: string = '') {
@@ -162,7 +166,7 @@ export class Click {
   }
 }
 
-export class Evaluate {
+class Evaluate {
   constructor (private readonly page: Page) {}
 
   async hook(hook: string, fn: (element: Element) => any) {
@@ -190,7 +194,7 @@ export class Evaluate {
   }
 }
 
-export class Log {
+class Log {
   constructor (private readonly page: Page) {}
 
   async url() {

@@ -55,9 +55,13 @@ export class AppController implements OnApplicationShutdown {
 
   @Get('/health/is_alive')
   async healthcheck(@Res() response: Response) {
-    await this.conn
-      .query(`SELECT 'health-check' FROM dual LIMIT 1`)
-      .then(() => response.sendStatus(200).end())
-      .catch(() => response.sendStatus(500).end());
+    if (this.configService.getDbType() === 'sqlite') {
+      response.sendStatus(200).end();
+    } else {
+      await this.conn
+        .query(`SELECT 'health-check' FROM dual LIMIT 1`)
+        .then(() => response.sendStatus(200).end())
+        .catch(() => response.sendStatus(500).end());
+    }
   }
 }
